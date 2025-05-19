@@ -28,49 +28,42 @@
 void okInterrupt();
 void navInterrupt();
 void sendFeedback();
-void handleSetpoint(uint8_t msg_id, const byte* msg_data);
+void handleSetpoint(uint8_t msg_id, const byte *msg_data);
 float theta_dxl;
 float phi_dxl;
 int time_bat = 0;
 int time_tel = 0;
 int time_data = 0;
 int time_tel_avg = DT_TEL;
- int32_t servo_data_HL_old[2];
+int32_t servo_data_HL_old[2];
 CanWrapper canW(5, 10000000UL, &SPI);
 //------
-int32_t valueToSend=0;
-  int32_t pos0_1a1b[2] = {0, 0};
-  int32_t pos0_2 = 0;
-  int32_t pos0_3 = 0;
-  int32_t pos0_4 = 0;
-  int32_t pos0_5 = 0;
+int32_t valueToSend = 0;
+int32_t pos0_1a1b[2] = {0, 0};
+int32_t pos0_2 = 0;
+int32_t pos0_3 = 0;
+int32_t pos0_4 = 0;
+int32_t pos0_5 = 0;
 
-
-  int32_t pos_1a1b[2] = {0, 0};
-  int32_t pos_2 = 0;
-  int32_t pos_3 = 0;
-  int32_t pos_4 = 0;
-  int32_t pos_5 = 0;
-
+int32_t pos_1a1b[2] = {0, 0};
+int32_t pos_2 = 0;
+int32_t pos_3 = 0;
+int32_t pos_4 = 0;
+int32_t pos_5 = 0;
 
 //------
 SmartMotor motorTrLeft(DRV_TR_LEFT_PWM, DRV_TR_LEFT_DIR, ENC_TR_LEFT_A, ENC_TR_LEFT_B, false);
 SmartMotor motorTrRight(DRV_TR_RIGHT_PWM, DRV_TR_RIGHT_DIR, ENC_TR_RIGHT_A, ENC_TR_RIGHT_B, true);
 
-
-
-
 #ifdef MODC_YAW
 AbsoluteEncoder encoderYaw(ABSOLUTE_ENCODER_ADDRESS);
 #endif
-
 
 #ifdef MODC_EE
 DynamixelMotor motorEEPitch(SERVO_EE_PITCH_ID);
 DynamixelMotor motorEEHeadPitch(SERVO_EE_HEAD_PITCH_ID);
 DynamixelMotor motorEEHeadRoll(SERVO_EE_HEAD_ROLL_ID);
 #endif
-
 
 #ifdef MODC_ARM
 
@@ -79,31 +72,31 @@ const uint8_t motorIDs[] = {SERVO_ARM_1a_PITCH_ID, SERVO_ARM_1b_PITCH_ID};
 const uint8_t numMotors = sizeof(motorIDs) / sizeof(motorIDs[0]);
 
 DynamixelLL dxlARM(Serial1, 0); // an instance for syncWrite (ID not used).
-DynamixelLL motorARM1aPitch( Serial1, SERVO_ARM_1a_PITCH_ID);
-DynamixelLL motorARM1bPitch( Serial1, SERVO_ARM_1b_PITCH_ID);
-DynamixelLL motorARM2Pitch( Serial1, SERVO_ARM_2_PITCH_ID);
-DynamixelLL motorARM3Roll( Serial1, SERVO_ARM_3_ROLL_ID);
-DynamixelLL motorARM4Pitch( Serial1, SERVO_ARM_4_PITCH_ID);
-DynamixelLL motorARM5Roll( Serial1, SERVO_ARM_5_ROLL_ID);
+DynamixelLL motorARM1aPitch(Serial1, SERVO_ARM_1a_PITCH_ID);
+DynamixelLL motorARM1bPitch(Serial1, SERVO_ARM_1b_PITCH_ID);
+DynamixelLL motorARM2Pitch(Serial1, SERVO_ARM_2_PITCH_ID);
+DynamixelLL motorARM3Roll(Serial1, SERVO_ARM_3_ROLL_ID);
+DynamixelLL motorARM4Pitch(Serial1, SERVO_ARM_4_PITCH_ID);
+DynamixelLL motorARM5Roll(Serial1, SERVO_ARM_5_ROLL_ID);
 #endif
-
 
 #ifdef MODC_JOINT
 // Motor IDs for the two motors.
 const uint8_t motorIDs[] = {SERVO_JOINT_1d_PITCH_ID, SERVO_JOINT_1s_PITCH_ID};
 const uint8_t numMotors = sizeof(motorIDs) / sizeof(motorIDs[0]);
 
-DynamixelLL dxlJOINT( Serial1, 0); // an instance for syncWrite (ID not used).
-DynamixelLL motorJOINT1dPitch( Serial1, SERVO_JOINT_1d_PITCH_ID);
-DynamixelLL motorJOINT1sPitch( Serial1, SERVO_JOINT_1s_PITCH_ID);
-DynamixelLL motorJOINT2Roll( Serial1, SERVO_JOINT_2_ROLL_ID);
+DynamixelLL dxlJOINT(Serial1, 0); // an instance for syncWrite (ID not used).
+DynamixelLL motorJOINT1dPitch(Serial1, SERVO_JOINT_1d_PITCH_ID);
+DynamixelLL motorJOINT1sPitch(Serial1, SERVO_JOINT_1s_PITCH_ID);
+DynamixelLL motorJOINT2Roll(Serial1, SERVO_JOINT_2_ROLL_ID);
 #endif
 
-//WebManagement wm(CONF_PATH);
+// WebManagement wm(CONF_PATH);
 
 Display display;
 
-void setup() {
+void setup()
+{
   Serial.begin(115200);
   Debug.setLevel(Levels::INFO); // comment to set debug verbosity to debug
   Wire1.setSDA(I2C_SENS_SDA);
@@ -116,16 +109,16 @@ void setup() {
   SPI.setTX(7);
   SPI.begin();
 
-  //LittleFS.begin();
+  // LittleFS.begin();
 
-  String hostname = WIFI_HOSTBASE+String(CAN_ID);
-  //wm.begin(WIFI_SSID, WIFI_PWD, hostname.c_str());
+  String hostname = WIFI_HOSTBASE + String(CAN_ID);
+  // wm.begin(WIFI_SSID, WIFI_PWD, hostname.c_str());
 
   // CAN initialization
   canW.begin();
 
   // initializing PWM
-  analogWriteFreq(PWM_FREQUENCY); // switching frequency to 15kHz
+  analogWriteFreq(PWM_FREQUENCY);  // switching frequency to 15kHz
   analogWriteRange(PWM_MAX_VALUE); // analogWrite range from 0 to 512, default is 255
 
   // initializing ADC
@@ -138,12 +131,12 @@ void setup() {
   motorTrLeft.calibrate();
   motorTrRight.calibrate();
 
-/*#if defined MODC_EE
-  Serial1.setRX(1);
-  Serial1.setTX(0);
-  Dynamixel.setSerial(&Serial1);
-  Dynamixel.begin(19200);
-#endif*/
+  #if defined MODC_EE
+    Serial1.setRX(1);
+    Serial1.setTX(0);
+    Dynamixel.setSerial(&Serial1);
+    Dynamixel.begin(19200);
+  #endif
 
   Debug.println("BEGIN", Levels::INFO);
 
@@ -159,7 +152,7 @@ void setup() {
   dxlARM.begin(1000000);
   dxlARM.enableSync(motorIDs, numMotors);
   Serial.println("inizzializing motors");
-    dxlARM.setTorqueEnable(false);
+  dxlARM.setTorqueEnable(false);
   motorARM2Pitch.setTorqueEnable(false);
   motorARM3Roll.setTorqueEnable(false);
   motorARM4Pitch.setTorqueEnable(false);
@@ -170,8 +163,6 @@ void setup() {
   motorARM3Roll.setOperatingMode(3);
   motorARM4Pitch.setOperatingMode(3);
   motorARM5Roll.setOperatingMode(3);
-
-
 
   motorARM1aPitch.setProfileVelocity(ProfileVelocity);
   motorARM1aPitch.setProfileAcceleration(ProfileAcceleration);
@@ -195,7 +186,6 @@ void setup() {
   motorARM5Roll.setDriveMode(false, false, false);
 
   // Declare and initialize the arrays
-
 
   // Get present position for all motors
   dxlARM.getPresentPosition(pos0_1a1b);
@@ -221,7 +211,7 @@ void setup() {
 #endif
 
 #ifdef MODC_JOINT
- Serial1.setTX(0);
+  Serial1.setTX(0);
   Serial1.setRX(1);
   dxlJOINT.begin(57600);
   dxlJOINT.enableSync(motorIDs, numMotors);
@@ -256,10 +246,10 @@ void setup() {
   pinMode(BTNNAV, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(BTNOK), okInterrupt, FALLING);
   attachInterrupt(digitalPinToInterrupt(BTNNAV), navInterrupt, FALLING);
-
 }
 
-void loop() {
+void loop()
+{
   int time_cur = millis();
   uint8_t msg_id;
   byte msg_data[8];
@@ -269,37 +259,43 @@ void loop() {
   motorTrRight.update();
 
   // health checks
-  if (time_cur - time_bat >= DT_BAT) {
+  if (time_cur - time_bat >= DT_BAT)
+  {
     time_bat = time_cur;
 
-    if (time_tel_avg > DT_TEL) Debug.println("Telemetry frequency below required: " + String(1000/time_tel_avg) + " Hz", Levels::WARN);
+    if (time_tel_avg > DT_TEL)
+      Debug.println("Telemetry frequency below required: " + String(1000 / time_tel_avg) + " Hz", Levels::WARN);
 
-    if(!battery.charged()) Debug.println("Battery voltage low! " + String(battery.readVoltage()) + "v", Levels::WARN);
+    if (!battery.charged())
+      Debug.println("Battery voltage low! " + String(battery.readVoltage()) + "v", Levels::WARN);
   }
 
   // send telemetry
-  if (time_cur - time_tel >= DT_TEL) {
+  if (time_cur - time_tel >= DT_TEL)
+  {
     time_tel_avg = (time_tel_avg + (time_cur - time_tel)) / 2;
     time_tel = time_cur;
 
     sendFeedback();
   }
 
-  if (canW.readMessage(&msg_id, msg_data)) {
+  if (canW.readMessage(&msg_id, msg_data))
+  {
 
     // Received CAN message with setpoint
     time_data = time_cur;
     handleSetpoint(msg_id, msg_data);
-  } else if (time_cur - time_data > CAN_TIMEOUT && time_data != -1) {
-    //if we do not receive data for more than a second stop motors
+  }
+  else if (time_cur - time_data > CAN_TIMEOUT && time_data != -1)
+  {
+    // if we do not receive data for more than a second stop motors
     time_data = -1;
     Debug.println("Stopping motors after timeout.", Levels::INFO);
     motorTrLeft.stop();
     motorTrRight.stop();
   }
 
-
-  //wm.handle();
+  // wm.handle();
   display.handleGUI();
 }
 
@@ -308,7 +304,8 @@ void loop() {
  * @param msg_id ID of the received message.
  * @param msg_data Pointer to the message data.
  */
-void handleSetpoint(uint8_t msg_id, const byte* msg_data) {
+void handleSetpoint(uint8_t msg_id, const byte *msg_data)
+{
   int32_t servo_data;
   float servo_data_1a;
   float servo_data_1b;
@@ -316,127 +313,125 @@ void handleSetpoint(uint8_t msg_id, const byte* msg_data) {
 
   Debug.println("RECEIVED CANBUS DATA");
 
-  switch (msg_id) {
-    case MOTOR_SETPOINT:
-      float leftSpeed, rightSpeed;
-      memcpy(&leftSpeed, msg_data, 4);
-      memcpy(&rightSpeed, msg_data + 4, 4);
-      motorTrLeft.setSpeed(leftSpeed);
-      motorTrRight.setSpeed(rightSpeed);
+  switch (msg_id)
+  {
+  case MOTOR_SETPOINT:
+    float leftSpeed, rightSpeed;
+    memcpy(&leftSpeed, msg_data, 4);
+    memcpy(&rightSpeed, msg_data + 4, 4);
+    motorTrLeft.setSpeed(leftSpeed);
+    motorTrRight.setSpeed(rightSpeed);
 
-      Debug.println("TRACTION DATA :\tleft: \t" + String(leftSpeed) + "\tright: \t" + String(rightSpeed));
-      break;
+    Debug.println("TRACTION DATA :\tleft: \t" + String(leftSpeed) + "\tright: \t" + String(rightSpeed));
+    break;
 
-    case DATA_EE_PITCH_SETPOINT:
-      memcpy(&servo_data, msg_data, 4);
+  case DATA_EE_PITCH_SETPOINT:
+    memcpy(&servo_data, msg_data, 4);
 #ifdef MODC_EE
-      motorEEPitch.moveSpeed(servo_data, SERVO_SPEED);
+    motorEEPitch.moveSpeed(servo_data, SERVO_SPEED);
 #endif
-      Debug.print("PITCH END EFFECTOR MOTOR DATA : \t");
-      Debug.println(servo_data);
-      break;
+    Debug.print("PITCH END EFFECTOR MOTOR DATA : \t");
+    Debug.println(servo_data);
+    break;
 
-    case DATA_EE_HEAD_PITCH_SETPOINT:
-      memcpy(&servo_data, msg_data, 2);
+  case DATA_EE_HEAD_PITCH_SETPOINT:
+    memcpy(&servo_data, msg_data, 2);
 #ifdef MODC_EE
-      motorEEHeadPitch.moveSpeed(servo_data, SERVO_SPEED);
+    motorEEHeadPitch.moveSpeed(servo_data, SERVO_SPEED);
 #endif
-      Debug.print("HEAD PITCH END EFFECTOR MOTOR DATA : \t");
-      Debug.println(servo_data);
-      break;
+    Debug.print("HEAD PITCH END EFFECTOR MOTOR DATA : \t");
+    Debug.println(servo_data);
+    break;
 
-    case DATA_EE_HEAD_ROLL_SETPOINT:
-      memcpy(&servo_data, msg_data, 2);
+  case DATA_EE_HEAD_ROLL_SETPOINT:
+    memcpy(&servo_data, msg_data, 2);
 #ifdef MODC_EE
-      motorEEHeadRoll.moveSpeed(servo_data, SERVO_SPEED);
+    motorEEHeadRoll.moveSpeed(servo_data, SERVO_SPEED);
 #endif
-      Debug.print("HEAD ROLL END EFFECTOR MOTOR DATA : \t");
-      Debug.println(servo_data);
-      break;
+    Debug.print("HEAD ROLL END EFFECTOR MOTOR DATA : \t");
+    Debug.println(servo_data);
+    break;
 
-
-      case ARM_PITCH_1a1b_SETPOINT:
-      memcpy(&servo_data_1a, msg_data, 4);
-      memcpy(&servo_data_1b, msg_data + 4, 4);
-      theta_dxl = servo_data_1a;
-      phi_dxl = servo_data_1b;
-       pos_1a1b[0] = (int32_t)(-(theta_dxl + phi_dxl)/2) + pos0_1a1b[0];
-       pos_1a1b[1] = (int32_t)((theta_dxl - phi_dxl)/2 )+ pos0_1a1b[1];
+  case ARM_PITCH_1a1b_SETPOINT:
+    memcpy(&servo_data_1a, msg_data, 4);
+    memcpy(&servo_data_1b, msg_data + 4, 4);
+    theta_dxl = servo_data_1a;
+    phi_dxl = servo_data_1b;
+    pos_1a1b[0] = (int32_t)(-((theta_dxl * (4096 / (2.0 * M_PI))) + (phi_dxl * (4096 / (2.0 * M_PI)))) / 2) + pos0_1a1b[0];
+    pos_1a1b[1] = (int32_t)(((theta_dxl * (4096 / (2.0 * M_PI))) - (phi_dxl * (4096 / (2.0 * M_PI)))) / 2) + pos0_1a1b[1];
 #ifdef MODC_ARM
-      dxlARM.setGoalPosition_EPCM(pos_1a1b);
-      Serial.println("ARM PITCH 1a1b SETPOINT: " + String(pos_1a1b[0]) + ", " + String(pos_1a1b[1]));
+    dxlARM.setGoalPosition_EPCM(pos_1a1b);
+    Serial.println("ARM PITCH 1a1b SETPOINT: " + String(pos_1a1b[0]) + ", " + String(pos_1a1b[1]));
 #endif
-      Debug.print("PITCH ARM 1a MOTOR DATA : \t");
-      Debug.println(pos_1a1b[0]);
-      Debug.print("PITCH ARM 1b MOTOR DATA : \t");
-      Debug.println(pos_1a1b[1]);
-      break;
+    Debug.print("PITCH ARM 1a MOTOR DATA : \t");
+    Debug.println(pos_1a1b[0]);
+    Debug.print("PITCH ARM 1b MOTOR DATA : \t");
+    Debug.println(pos_1a1b[1]);
+    break;
 
+  case ARM_PITCH_2_SETPOINT:
+    memcpy(&servo_data_float, msg_data, 4);
+    Serial.println("servo_data: " + String(servo_data_float));
+    valueToSend = (int32_t)(servo_data_float * (4096 / (2.0 * M_PI)));
+    Serial.println("valueToSend: " + String(valueToSend));
+    pos_2 = valueToSend + pos0_2;
+#ifdef MODC_ARM
+    motorARM2Pitch.setGoalPosition_EPCM(pos_2);
+    Serial.println("ARM PITCH 2 SETPOINT: " + String(pos_2));
+#endif
+    Debug.print("PITCH ARM 2 MOTOR DATA : \t");
+    Debug.println(pos_2);
+    break;
+  case ARM_ROLL_3_SETPOINT:
+    memcpy(&servo_data_float, msg_data, 4);
+    valueToSend = (int32_t)(servo_data_float * (4096 / (2.0 * M_PI)));
+    pos_3 = valueToSend + pos0_3;
+#ifdef MODC_ARM
+    motorARM3Roll.setGoalPosition_EPCM(pos_3);
+    Serial.println("ARM ROLL 3 SETPOINT: " + String(pos_3));
+#endif
+    Debug.print("ROLL ARM 3 MOTOR DATA : \t");
+    Debug.println(pos_3);
+    break;
+  case ARM_PITCH_4_SETPOINT:
+    memcpy(&servo_data_float, msg_data, 4);
+    valueToSend = (int32_t)(servo_data_float * (4096 / (2.0 * M_PI)));
+    pos_4 = valueToSend + pos0_4;
+#ifdef MODC_ARM
+    motorARM4Pitch.setGoalPosition_EPCM(pos_4);
+    Serial.println("ARM PITCH 4 SETPOINT: " + String(pos_4));
+#endif
+    Debug.print("PITCH ARM 4 MOTOR DATA : \t");
+    Debug.println(pos_4);
+    break;
+  case ARM_ROLL_5_SETPOINT:
+    memcpy(&servo_data_float, msg_data, 4);
+    valueToSend = (int32_t)(servo_data_float * (4096 / (2.0 * M_PI)));
+    pos_5 = valueToSend + pos0_5;
+#ifdef MODC_ARM
+    motorARM5Roll.setGoalPosition_EPCM(pos_5);
+    Serial.println("ARM ROLL 5 SETPOINT: " + String(pos_5));
+#endif
+    Debug.print("ROLL ARM 5 MOTOR DATA : \t");
+    Debug.println(pos_5);
+    break;
 
-      case ARM_PITCH_2_SETPOINT:
-      memcpy(&servo_data_float, msg_data, 4);
-      Serial.println("servo_data: " + String(servo_data_float));
-      valueToSend = (int32_t)(servo_data_float * (4096 / (2.0 * M_PI)));
-      Serial.println("valueToSend: " + String(valueToSend));
-      pos_2= valueToSend+pos0_2;
-#ifdef MODC_ARM
-      motorARM2Pitch.setGoalPosition_EPCM( pos_2);
-      Serial.println("ARM PITCH 2 SETPOINT: " + String(pos_2));
-#endif
-      Debug.print("PITCH ARM 2 MOTOR DATA : \t");
-      Debug.println(pos_2);
-      break;
-    case ARM_ROLL_3_SETPOINT:
-      memcpy(&servo_data_float, msg_data, 4);
-      valueToSend = (int32_t)(servo_data_float * (4096 / (2.0 * M_PI)));
-      pos_3= valueToSend+pos0_3;
-#ifdef MODC_ARM
-      motorARM3Roll.setGoalPosition_EPCM( pos_3);
-      Serial.println("ARM ROLL 3 SETPOINT: " + String(pos_3));
-#endif
-      Debug.print("ROLL ARM 3 MOTOR DATA : \t");
-      Debug.println(pos_3);
-      break;
-    case ARM_PITCH_4_SETPOINT:
-      memcpy(&servo_data_float, msg_data, 4);
-      valueToSend = (int32_t)(servo_data_float * (4096 / (2.0 * M_PI)));
-      pos_4= valueToSend+pos0_4;
-#ifdef MODC_ARM
-      motorARM4Pitch.setGoalPosition_EPCM( pos_4);
-      Serial.println("ARM PITCH 4 SETPOINT: " + String(pos_4));
-#endif
-      Debug.print("PITCH ARM 4 MOTOR DATA : \t");
-      Debug.println(pos_4);
-      break;
-    case ARM_ROLL_5_SETPOINT:
-      memcpy(&servo_data_float, msg_data, 4);
-      valueToSend = (int32_t)(servo_data_float * (4096 / (2.0 * M_PI)));
-      pos_5= valueToSend+pos0_5;
-#ifdef MODC_ARM
-      motorARM5Roll.setGoalPosition_EPCM(pos_5);
-      Serial.println("ARM ROLL 5 SETPOINT: " + String(pos_5));
-#endif
-      Debug.print("ROLL ARM 5 MOTOR DATA : \t");
-      Debug.println(pos_5);
-      break;
-
-
-    case JOINT_PITCH_1d1s_SETPOINT:
-      memcpy(&servo_data, msg_data, 2);
+  case JOINT_PITCH_1d1s_SETPOINT:
+    memcpy(&servo_data, msg_data, 2);
 #ifdef MODC_JOINT
-      dxlJOINT.setGoalPosition_EPCM( servo_data);
+    dxlJOINT.setGoalPosition_EPCM(servo_data);
 #endif
-      Debug.print("PITCH JOINT 1d1s MOTOR DATA : \t");
-      Debug.println(servo_data);
-      break;
-    case JOINT_ROLL_2_SETPOINT:
-      memcpy(&servo_data, msg_data, 2);
+    Debug.print("PITCH JOINT 1d1s MOTOR DATA : \t");
+    Debug.println(servo_data);
+    break;
+  case JOINT_ROLL_2_SETPOINT:
+    memcpy(&servo_data, msg_data, 2);
 #ifdef MODC_JOINT
-      motorJOINT2Roll.setGoalPosition_EPCM( servo_data);
+    motorJOINT2Roll.setGoalPosition_EPCM(servo_data);
 #endif
-      Debug.print("ROLL JOINT 2 MOTOR DATA : \t");
-      Debug.println(servo_data);
-      break;
+    Debug.print("ROLL JOINT 2 MOTOR DATA : \t");
+    Debug.println(servo_data);
+    break;
   }
 }
 
@@ -448,7 +443,8 @@ void handleSetpoint(uint8_t msg_id, const byte* msg_data) {
  *
  * @note The function uses conditional compilation to include/exclude parts of the code based on the presence of specific modules.
  */
-void sendFeedback() {
+void sendFeedback()
+{
 
   // send motor data
   float speeds[2] = {motorTrLeft.getSpeed(), motorTrRight.getSpeed()};
@@ -506,10 +502,12 @@ void sendFeedback() {
 #endif
 }
 
-void okInterrupt() {
+void okInterrupt()
+{
   display.okInterrupt();
 }
 
-void navInterrupt() {
+void navInterrupt()
+{
   display.navInterrupt();
 }
